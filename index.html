@@ -94,28 +94,39 @@ function addElement(x, y) {
   redrawLevel();
 }
 
-    function exportLevel() {
-      const exportedData = {
-        level1: {
-          world: { width: canvas.width, height: canvas.height },
-          player: levelsData.level1.player,
-          target: levelsData.level1.target,
-          hills: levelsData.level1.hills,
-          hillsFront: levelsData.level1.hillsFront,
-          clouds: levelsData.level1.clouds,
-          platforms: levelsData.level1.platforms,
-          enemies: levelsData.level1.enemies,
-          spikes: levelsData.level1.spikes,
-          fallingBlocks: levelsData.level1.fallingBlocks,
-          oneWayPlatforms: levelsData.level1.oneWayPlatforms,
-        },
-        level2: { /* Identique à level1 pour cet exemple */ },
-        level3: { /* Identique à level1 pour cet exemple */ }
-      };
+function exportLevel() {
+  const exportedData = {
+    level1: {
+      world: { width: canvas.width, height: canvas.height },
+      player: levelsData.level1.player,
+      target: levelsData.level1.target,
+      hills: levelsData.level1.hills,
+      hillsFront: levelsData.level1.hillsFront,
+      clouds: levelsData.level1.clouds,
+      platforms: levelsData.level1.platforms,
+      enemies: levelsData.level1.enemies,
+      spikes: levelsData.level1.spikes,
+      fallingBlocks: levelsData.level1.fallingBlocks,
+      oneWayPlatforms: levelsData.level1.oneWayPlatforms,
+    },
+    level2: { /* Identique à level1 pour cet exemple */ },
+    level3: { /* Identique à level1 pour cet exemple */ }
+  };
 
-      console.log("Niveaux exportés : ", JSON.stringify(exportedData, null, 2));
-      alert("Voir la console pour les données exportées");
-    }
+  const jsonData = JSON.stringify(exportedData, null, 2);
+  console.log("Niveaux exportés : ", jsonData);
+
+  copyToClipboard(jsonData);
+  alert("Données exportées et copiées dans le presse-papiers !");
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    console.log('Niveaux copiés dans le presse-papiers');
+  }).catch(err => {
+    console.error('Erreur lors de la copie dans le presse-papiers :', err);
+  });
+}
 
     function drawGrid() {
       ctx.strokeStyle = "#CCCCCC";
