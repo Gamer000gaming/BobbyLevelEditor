@@ -33,7 +33,7 @@
       width: 250px;
       display: flex;
       flex-direction: column;
-      padding: 10px;
+      padding: 20px;
       background-color: #f4f4f4;
       box-shadow: -3px 0 5px rgba(0,0,0,0.1);
       overflow-y: auto;
@@ -59,7 +59,6 @@
     <canvas id="canvas" width="900" height="540"></canvas>
     </div
   <div id="controls">
-    <button class="button">rien</button>
     <button class="button" onclick="setMode('player')">Ajouter Joueur</button>
     <button class="button" onclick="setMode('target')">Ajouter Objectif</button>
     <button class="button" onclick="setMode('hill')">Ajouter Colline</button>
@@ -254,7 +253,7 @@
       });
       redrawLevel();
     }
-</script>
     window.onload = () => { redrawLevel(); };
+</script>
 </body>
 </html>
