@@ -108,9 +108,24 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const gridSize = 40;
-    let levelsData = {
-      level1: { player: null, target: null, hills: [], hillsFront: [], clouds: [], platforms: [], enemies: [], spikes: [], fallingBlocks: [], oneWayPlatforms: [], cannons: [], coins: [], transformers: [], spikyBalls: [] }
-    };
+   let levelsData = {
+  level1: {
+    player: null,
+    target: null,
+    hills: [],
+    hillsFront: [],
+    clouds: [],
+    platforms: [],
+    enemies: [],
+    spikes: [],
+    fallingBlocks: [],
+    oneWayPlatforms: [],
+    cannons: [],
+    coins: [],
+    transformers: [],
+    spikyBalls: []
+  }
+};
     let currentMode = null;
     let selectedElement = null;
     let cameraOffsetX = 0;
@@ -122,28 +137,28 @@
     }
 
     function addElement(x, y) {
-      x = Math.round(x / gridSize) * gridSize;
-      y = Math.round(y / gridSize) * gridSize;
-      const element = { x, y, orientation: 0 };  // New elements default to orientation 0
+  x = Math.round(x / gridSize) * gridSize;
+  y = Math.round(y / gridSize) * gridSize;
+  const element = { x, y };
 
-      switch(currentMode) {
-        case 'player': levelsData.level1.player = element; break;
-        case 'target': levelsData.level1.target = element; break;
-        case 'hill': levelsData.level1.hills.push(element); break;
-        case 'hillFront': levelsData.level1.hillsFront.push(element); break;
-        case 'cloud': levelsData.level1.clouds.push(element); break;
-        case 'platform': levelsData.level1.platforms.push({ x, y, width: gridSize, height: gridSize }); break;
-        case 'enemy': levelsData.level1.enemies.push({ x, y, type: 1 }); break;  // Default type is 1
-        case 'spike': levelsData.level1.spikes.push(element); break;
-        case 'fallingBlock': levelsData.level1.fallingBlocks.push(element); break;
-        case 'oneWayPlatform': levelsData.level1.oneWayPlatforms.push({ x, y, width: gridSize }); break;
-        case 'cannon': levelsData.level1.cannons.push({ x, y, orientation: 0 }); break;  // Default orientation is 0
-        case 'coin': levelsData.level1.coins.push(element); break;
-        case 'transformer': levelsData.level1.transformers.push(element); break;
-        case 'spikyBall': levelsData.level1.spikyBalls.push(element); break;
-      }
-      redrawLevel();
-    }
+  switch(currentMode) {
+    case 'player': levelsData.level1.player = element; break;
+    case 'target': levelsData.level1.target = element; break;
+    case 'hill': levelsData.level1.hills.push(element); break;
+    case 'hillFront': levelsData.level1.hillsFront.push(element); break;
+    case 'cloud': levelsData.level1.clouds.push(element); break;
+    case 'platform': levelsData.level1.platforms.push({ x, y, width: gridSize, height: gridSize }); break;
+    case 'enemy': levelsData.level1.enemies.push({ x, y, type: 1 }); break;
+    case 'spike': levelsData.level1.spikes.push(element); break;  // Ensure spikes are added correctly
+    case 'fallingBlock': levelsData.level1.fallingBlocks.push(element); break;  // Ensure falling blocks are added
+    case 'oneWayPlatform': levelsData.level1.oneWayPlatforms.push({ x, y, width: gridSize }); break;  // Ensure one-way platforms are added
+    case 'cannon': levelsData.level1.cannons.push({ x, y, orientation: 0 }); break;
+    case 'coin': levelsData.level1.coins.push(element); break;
+    case 'transformer': levelsData.level1.transformers.push(element); break;
+    case 'spikyBall': levelsData.level1.spikyBalls.push(element); break;
+  }
+  redrawLevel();
+}
 
     function updateElementProperty(property) {
       if (!selectedElement) return;
@@ -174,75 +189,90 @@
     }
 
     function redrawLevel() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawGrid();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawGrid();
 
-      const offsetDraw = (x, y) => ({ x: x - cameraOffsetX, y: y - cameraOffsetY });
+  const offsetDraw = (x, y) => ({ x: x - cameraOffsetX, y: y - cameraOffsetY });
 
-      if (levelsData.level1.player) {
-        const { x, y } = offsetDraw(levelsData.level1.player.x, levelsData.level1.player.y);
-        drawPlayer(x, y);
-      }
-      if (levelsData.level1.target) {
-        const { x, y } = offsetDraw(levelsData.level1.target.x, levelsData.level1.target.y);
-        drawTarget(x, y);
-      }
-      levelsData.level1.hills.forEach(hill => {
-        const { x, y } = offsetDraw(hill.x, hill.y);
-        drawHill(x, y);
-      });
-      levelsData.level1.hillsFront.forEach(hillFront => {
-        const { x, y } = offsetDraw(hillFront.x, hillFront.y);
-        drawHillFront(x, y);
-      });
-      levelsData.level1.clouds.forEach(cloud => {
-        const { x, y } = offsetDraw(cloud.x, cloud.y);
-        drawCloud(x, y);
-      });
-      levelsData.level1.platforms.forEach(platform => {
-        const { x, y } = offsetDraw(platform.x, platform.y);
-        drawPlatform(x, y, platform.width, platform.height);
-      });
-      levelsData.level1.enemies.forEach(enemy => {
-        const { x, y } = offsetDraw(enemy.x, enemy.y);
-        drawEnemy(x, y, enemy.type);
-      });
-      levelsData.level1.cannons.forEach(cannon => {
-        const { x, y } = offsetDraw(cannon.x, cannon.y);
-        drawCannon(x, y, cannon.orientation);
-      });
-      levelsData.level1.coins.forEach(coin => {
-        const { x, y } = offsetDraw(coin.x, coin.y);
-        drawCoin(x, y);
-      });
-      levelsData.level1.transformers.forEach(transformer => {
-        const { x, y } = offsetDraw(transformer.x, transformer.y);
-        drawTransformer(x, y);
-      });
-      levelsData.level1.spikyBalls.forEach(spikyBall => {
-        const { x, y } = offsetDraw(spikyBall.x, spikyBall.y);
-        drawSpikyBall(x, y);
-      });
-    }
+  // Draw player and target, if they exist
+  if (levelsData.level1.player) {
+    const { x, y } = offsetDraw(levelsData.level1.player.x, levelsData.level1.player.y);
+    drawPlayer(x, y);
+  }
+  if (levelsData.level1.target) {
+    const { x, y } = offsetDraw(levelsData.level1.target.x, levelsData.level1.target.y);
+    drawTarget(x, y);
+  }
 
-    function drawPlayer(x, y) { ctx.fillStyle = "white"; ctx.fillRect(x, y, gridSize, gridSize); }
-    function drawTarget(x, y) { ctx.fillStyle = "red"; ctx.fillRect(x, y, gridSize, gridSize); }
-    function drawHill(x, y) { ctx.fillStyle = "green"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + gridSize, y); ctx.lineTo(x + gridSize / 2, y - gridSize); ctx.fill(); }
-    function drawHillFront(x, y) { ctx.fillStyle = "gray"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + gridSize, y); ctx.lineTo(x + gridSize / 2, y - gridSize); ctx.fill(); }
-    function drawCloud(x, y) { ctx.fillStyle = "lightblue"; ctx.beginPath(); ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 2, 0, Math.PI * 2); ctx.fill(); }
-    function drawPlatform(x, y, width, height) { ctx.fillStyle = "brown"; ctx.fillRect(x, y, width, height); }
-    function drawEnemy(x, y, type) { 
-      ctx.fillStyle = type === 1 ? "purple" : "darkred"; 
-      ctx.fillRect(x, y, gridSize, gridSize); 
-    }
-    function drawCannon(x, y, orientation) {
-      ctx.fillStyle = "darkgray";
-      ctx.save();
-      ctx.translate(x + gridSize / 2, y + gridSize / 2); // Move to the center of the cannon
-      ctx.rotate((Math.PI / 2) * orientation); // Rotate based on orientation
-      ctx.fillRect(-gridSize / 4, -gridSize / 2, gridSize / 2, gridSize); // Draw the cannon
-      ctx.restore();
-    }
+  // Draw each element group, with offset adjustments
+  levelsData.level1.hills.forEach(hill => {
+    const { x, y } = offsetDraw(hill.x, hill.y);
+    drawHill(x, y);
+  });
+  levelsData.level1.hillsFront.forEach(hillFront => {
+    const { x, y } = offsetDraw(hillFront.x, hillFront.y);
+    drawHillFront(x, y);
+  });
+  levelsData.level1.clouds.forEach(cloud => {
+    const { x, y } = offsetDraw(cloud.x, cloud.y);
+    drawCloud(x, y);
+  });
+  levelsData.level1.platforms.forEach(platform => {
+    const { x, y } = offsetDraw(platform.x, platform.y);
+    drawPlatform(x, y, platform.width, platform.height);
+  });
+  levelsData.level1.enemies.forEach(enemy => {
+    const { x, y } = offsetDraw(enemy.x, enemy.y);
+    drawEnemy(x, y, enemy.type);
+  });
+  levelsData.level1.spikes.forEach(spike => {  // Ensure spikes are drawn
+    const { x, y } = offsetDraw(spike.x, spike.y);
+    drawSpike(x, y);
+  });
+  levelsData.level1.fallingBlocks.forEach(block => {  // Ensure falling blocks are drawn
+    const { x, y } = offsetDraw(block.x, block.y);
+    drawFallingBlock(x, y);
+  });
+  levelsData.level1.oneWayPlatforms.forEach(platform => {  // Ensure one-way platforms are drawn
+    const { x, y } = offsetDraw(platform.x, platform.y);
+    drawOneWayPlatform(x, y, platform.width);
+  });
+  levelsData.level1.cannons.forEach(cannon => {
+    const { x, y } = offsetDraw(cannon.x, cannon.y);
+    drawCannon(x, y, cannon.orientation);
+  });
+  levelsData.level1.coins.forEach(coin => {
+    const { x, y } = offsetDraw(coin.x, coin.y);
+    drawCoin(x, y);
+  });
+  levelsData.level1.transformers.forEach(transformer => {
+    const { x, y } = offsetDraw(transformer.x, transformer.y);
+    drawTransformer(x, y);
+  });
+  levelsData.level1.spikyBalls.forEach(spikyBall => {
+    const { x, y } = offsetDraw(spikyBall.x, spikyBall.y);
+    drawSpikyBall(x, y);
+  });
+}
+// Ensure each draw function is defined
+function drawPlayer(x, y) { ctx.fillStyle = "white"; ctx.fillRect(x, y, gridSize, gridSize); }
+function drawTarget(x, y) { ctx.fillStyle = "red"; ctx.fillRect(x, y, gridSize, gridSize); }
+function drawHill(x, y) { ctx.fillStyle = "green"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + gridSize, y); ctx.lineTo(x + gridSize / 2, y - gridSize); ctx.fill(); }
+function drawHillFront(x, y) { ctx.fillStyle = "gray"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + gridSize, y); ctx.lineTo(x + gridSize / 2, y - gridSize); ctx.fill(); }
+function drawCloud(x, y) { ctx.fillStyle = "lightblue"; ctx.beginPath(); ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 2, 0, Math.PI * 2); ctx.fill(); }
+function drawPlatform(x, y, width, height) { ctx.fillStyle = "brown"; ctx.fillRect(x, y, width, height); }
+function drawEnemy(x, y, type) { ctx.fillStyle = type === 1 ? "purple" : "darkred"; ctx.fillRect(x, y, gridSize, gridSize); }
+function drawSpike(x, y) { ctx.fillStyle = "black"; ctx.beginPath(); ctx.moveTo(x, y + gridSize); ctx.lineTo(x + gridSize / 2, y); ctx.lineTo(x + gridSize, y + gridSize); ctx.fill(); }
+function drawFallingBlock(x, y) { ctx.fillStyle = "darkgray"; ctx.fillRect(x, y, gridSize, gridSize); }
+function drawOneWayPlatform(x, y, width) { ctx.fillStyle = "lightgray"; ctx.fillRect(x, y, width, gridSize / 4); }
+function drawCannon(x, y, orientation) {
+  ctx.fillStyle = "darkgray";
+  ctx.save();
+  ctx.translate(x + gridSize / 2, y + gridSize / 2);
+  ctx.rotate((Math.PI / 2) * orientation);
+  ctx.fillRect(-gridSize / 4, -gridSize / 2, gridSize / 2, gridSize);
+  ctx.restore();
+}
     function drawCoin(x, y) { 
       ctx.fillStyle = "yellow"; 
       ctx.beginPath(); 
