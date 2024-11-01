@@ -4,27 +4,61 @@
   <meta charset="UTF-8">
   <title>Éditeur de Niveau pour Bobby</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      flex-direction: row;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #87CEEB;
+      padding: 10px;
+    }
     #canvas {
       border: 1px solid #000;
-      background-color: #87CEEB;
       cursor: crosshair;
+      max-width: 100%;
+      max-height: 100%;
     }
     #controls {
+      width: 250px;
       display: flex;
       flex-direction: column;
-      margin-top: 10px;
+      padding: 10px;
+      background-color: #f4f4f4;
+      box-shadow: -3px 0 5px rgba(0,0,0,0.1);
+      overflow-y: auto;
     }
     .button {
-      margin: 5px;
+      margin: 5px 0;
+      padding: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      text-align: center;
     }
-    #camera-controls {
-      margin-top: 20px;
+    .button:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
-  <h1>Éditeur de Niveau pour Bobby</h1>
-  <canvas id="canvas" width="900" height="540"></canvas>
+  <div id="canvas-container">
+    <canvas id="canvas" width="900" height="540"></canvas>
+    </div
+    <button>rien</button>
   <div id="controls">
     <button class="button" onclick="setMode('player')">Ajouter Joueur</button>
     <button class="button" onclick="setMode('target')">Ajouter Objectif</button>
@@ -39,94 +73,56 @@
     <button class="button" onclick="exportLevel()">Exporter Niveau</button>
     <button class="button" onclick="setMode('remove')">Mode Suppression</button>
     <button class="button" onclick="setMode('move')">Mode Déplacement</button>
-    <button class="button" onclick="expandCanvas()">Agrandir le Monde</button> <!-- Nouveau bouton -->
+    <button class="button" onclick="moveCamera('left')">Caméra Gauche</button>
+    <button class="button" onclick="moveCamera('right')">Caméra Droite</button>
+    <button class="button" onclick="moveCamera('up')">Caméra Haut</button>
+    <button class="button" onclick="moveCamera('down')">Caméra Bas</button>
   </div>
-  
-  <div id="camera-controls">
-    <h2>Contrôles de la Caméra</h2>
-    <button class="button" onclick="moveCamera(-gridSize, 0)">Déplacer Gauche</button>
-    <button class="button" onclick="moveCamera(gridSize, 0)">Déplacer Droite</button>
-    <button class="button" onclick="moveCamera(0, -gridSize)">Déplacer Haut</button>
-    <button class="button" onclick="moveCamera(0, gridSize)">Déplacer Bas</button>
-  </div>
-
-  <script>
+<script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const gridSize = 40;
-    let camera = { x: 0, y: 0 };
-    
     let levelsData = {
-      level1: { player: null, target: null, hills: [], hillsFront: [], clouds: [], platforms: [], enemies: [], spikes: [], fallingBlocks: [], oneWayPlatforms: [] },
-      level2: { player: null, target: null, hills: [], hillsFront: [], clouds: [], platforms: [], enemies: [], spikes: [], fallingBlocks: [], oneWayPlatforms: [] },
-      level3: { player: null, target: null, hills: [], hillsFront: [], clouds: [], platforms: [], enemies: [], spikes: [], fallingBlocks: [], oneWayPlatforms: [] }
+      level1: { player: null, target: null, hills: [], hillsFront: [], clouds: [], platforms: [], enemies: [], spikes: [], fallingBlocks: [], oneWayPlatforms: [] }
     };
     let currentMode = null;
     let selectedElement = null;
+    let cameraOffsetX = 0;
+    let cameraOffsetY = 0;
 
     function setMode(mode) {
       currentMode = mode;
       selectedElement = null;
     }
 
-function addElement(x, y) {
-  // Ajuster la position en fonction de la caméra
-  x = Math.round(x / gridSize) * gridSize;
-  y = Math.round(y / gridSize) * gridSize;
-  
-  const element = { x, y };
-  switch(currentMode) {
-    case 'player': levelsData.level1.player = element; break;
-    case 'target': levelsData.level1.target = element; break;
-    case 'hill': levelsData.level1.hills.push(element); break;
-    case 'hillFront': levelsData.level1.hillsFront.push(element); break;
-    case 'cloud': levelsData.level1.clouds.push(element); break;
-    case 'platform': 
-      levelsData.level1.platforms.push({ x, y, width: gridSize, height: gridSize });
-      break;
-    case 'enemy': levelsData.level1.enemies.push(element); break;
-    case 'spike': levelsData.level1.spikes.push(element); break;
-    case 'fallingBlock': levelsData.level1.fallingBlocks.push(element); break;
-    case 'oneWayPlatform': 
-      levelsData.level1.oneWayPlatforms.push({ x, y, width: gridSize });
-      break;
-  }
-  redrawLevel();
-}
+    function addElement(x, y) {
+      x = Math.round(x / gridSize) * gridSize + cameraOffsetX;
+      y = Math.round(y / gridSize) * gridSize + cameraOffsetY;
+      const element = { x, y };
 
-function exportLevel() {
-  const exportedData = {
-    level1: {
-      world: { width: canvas.width, height: canvas.height },
-      player: levelsData.level1.player,
-      target: levelsData.level1.target,
-      hills: levelsData.level1.hills,
-      hillsFront: levelsData.level1.hillsFront,
-      clouds: levelsData.level1.clouds,
-      platforms: levelsData.level1.platforms,
-      enemies: levelsData.level1.enemies,
-      spikes: levelsData.level1.spikes,
-      fallingBlocks: levelsData.level1.fallingBlocks,
-      oneWayPlatforms: levelsData.level1.oneWayPlatforms,
-    },
-    level2: { /* Identique à level1 pour cet exemple */ },
-    level3: { /* Identique à level1 pour cet exemple */ }
-  };
+      switch(currentMode) {
+        case 'player': levelsData.level1.player = element; break;
+        case 'target': levelsData.level1.target = element; break;
+        case 'hill': levelsData.level1.hills.push(element); break;
+        case 'hillFront': levelsData.level1.hillsFront.push(element); break;
+        case 'cloud': levelsData.level1.clouds.push(element); break;
+        case 'platform': 
+          levelsData.level1.platforms.push({ x, y, width: gridSize, height: gridSize });
+          break;
+        case 'enemy': levelsData.level1.enemies.push(element); break;
+        case 'spike': levelsData.level1.spikes.push(element); break;
+        case 'fallingBlock': levelsData.level1.fallingBlocks.push(element); break;
+        case 'oneWayPlatform': 
+          levelsData.level1.oneWayPlatforms.push({ x, y, width: gridSize });
+          break;
+      }
+      redrawLevel();
+    }
 
-  const jsonData = JSON.stringify(exportedData, null, 2);
-  console.log("Niveaux exportés : ", jsonData);
-
-  copyToClipboard(jsonData);
-  alert("Données exportées et copiées dans le presse-papiers !");
-}
-
-function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(() => {
-    console.log('Niveaux copiés dans le presse-papiers');
-  }).catch(err => {
-    console.error('Erreur lors de la copie dans le presse-papiers :', err);
-  });
-}
+    function exportLevel() {
+      const exportedData = JSON.stringify(levelsData.level1, null, 2);
+      navigator.clipboard.writeText(exportedData).then(() => alert("Niveau copié dans le presse-papiers !"));
+    }
 
     function drawGrid() {
       ctx.strokeStyle = "#CCCCCC";
@@ -147,102 +143,118 @@ function copyToClipboard(text) {
     function redrawLevel() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawGrid();
-      ctx.save();
-      ctx.translate(-camera.x, -camera.y); // Appliquer la translation de la caméra
 
-      if (levelsData.level1.player) drawPlayer(levelsData.level1.player.x, levelsData.level1.player.y);
-      if (levelsData.level1.target) drawTarget(levelsData.level1.target.x, levelsData.level1.target.y);
-      levelsData.level1.hills.forEach(hill => drawHill(hill.x, hill.y));
-      levelsData.level1.hillsFront.forEach(hill => drawHillFront(hill.x, hill.y));
-      levelsData.level1.clouds.forEach(cloud => drawCloud(cloud.x, cloud.y));
-      levelsData.level1.platforms.forEach(platform => drawPlatform(platform.x, platform.y));
-      levelsData.level1.enemies.forEach(enemy => drawEnemy(enemy.x, enemy.y));
-      levelsData.level1.spikes.forEach(spike => drawSpike(spike.x, spike.y + gridSize)); // Offset vertical de 1 bloc
-      levelsData.level1.fallingBlocks.forEach(block => drawFallingBlock(block.x, block.y));
-      levelsData.level1.oneWayPlatforms.forEach(platform => drawOneWayPlatform(platform.x, platform.y));
-      
-      ctx.restore(); // Rétablir le contexte
-    }
+      const offsetDraw = (x, y) => ({ x: x - cameraOffsetX, y: y - cameraOffsetY });
 
-    function moveCamera(dx, dy) {
-      camera.x += dx;
-      camera.y += dy;
-      redrawLevel();
-    }
-
-    function expandCanvas() {
-      const newWidth = canvas.width + 200; // Augmente la largeur
-      const newHeight = canvas.height; // Garder la même hauteur
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = newWidth;
-      tempCanvas.height = newHeight;
-      const tempCtx = tempCanvas.getContext('2d');
-
-      // Dessiner l'ancien canevas sur le nouveau
-      tempCtx.drawImage(canvas, 0, 0);
-      canvas.width = newWidth; // Mettre à jour la largeur du canevas
-      canvas.height = newHeight; // Mettre à jour la hauteur du canevas
-      ctx.drawImage(tempCanvas, 0, 0); // Dessiner l'ancien canevas sur le nouveau
-
-      redrawLevel();
+      if (levelsData.level1.player) {
+        const { x, y } = offsetDraw(levelsData.level1.player.x, levelsData.level1.player.y);
+        drawPlayer(x, y);
+      }
+      if (levelsData.level1.target) {
+        const { x, y } = offsetDraw(levelsData.level1.target.x, levelsData.level1.target.y);
+        drawTarget(x, y);
+      }
+      levelsData.level1.hills.forEach(hill => {
+        const { x, y } = offsetDraw(hill.x, hill.y);
+        drawHill(x, y);
+      });
+      levelsData.level1.hillsFront.forEach(hillFront => {
+        const { x, y } = offsetDraw(hillFront.x, hillFront.y);
+        drawHillFront(x, y);
+      });
+      levelsData.level1.clouds.forEach(cloud => {
+        const { x, y } = offsetDraw(cloud.x, cloud.y);
+        drawCloud(x, y);
+      });
+      levelsData.level1.platforms.forEach(platform => {
+        const { x, y } = offsetDraw(platform.x, platform.y);
+        drawPlatform(x, y, platform.width, platform.height);
+      });
+      levelsData.level1.enemies.forEach(enemy => {
+        const { x, y } = offsetDraw(enemy.x, enemy.y);
+        drawEnemy(x, y);
+      });
+      levelsData.level1.spikes.forEach(spike => {
+        const { x, y } = offsetDraw(spike.x, spike.y);
+        drawSpike(x, y);
+      });
+      levelsData.level1.fallingBlocks.forEach(block => {
+        const { x, y } = offsetDraw(block.x, block.y);
+        drawFallingBlock(x, y);
+      });
+      levelsData.level1.oneWayPlatforms.forEach(platform => {
+        const { x, y } = offsetDraw(platform.x, platform.y);
+        drawOneWayPlatform(x, y, platform.width);
+      });
     }
 
     function drawPlayer(x, y) { ctx.fillStyle = "white"; ctx.fillRect(x, y, gridSize, gridSize); }
     function drawTarget(x, y) { ctx.fillStyle = "red"; ctx.fillRect(x, y, gridSize, gridSize); }
     function drawHill(x, y) { ctx.fillStyle = "green"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + gridSize, y); ctx.lineTo(x + gridSize / 2, y - gridSize); ctx.fill(); }
-    function drawHillFront(x, y) { ctx.fillStyle = "lightgreen"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + gridSize, y); ctx.lineTo(x + gridSize / 2, y - gridSize); ctx.fill(); }
-    function drawCloud(x, y) { ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 2, 0, Math.PI * 2); ctx.fill(); }
-    function drawPlatform(x, y) { ctx.fillStyle = "brown"; ctx.fillRect(x, y, gridSize, gridSize); }
-    function drawEnemy(x, y) { ctx.fillStyle = "black"; ctx.fillRect(x, y, gridSize, gridSize); }
-    function drawSpike(x, y) { ctx.fillStyle = "gray"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + gridSize, y); ctx.lineTo(x + gridSize / 2, y - gridSize); ctx.fill(); }
+    function drawHillFront(x, y) { ctx.fillStyle = "gray"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + gridSize, y); ctx.lineTo(x + gridSize / 2, y - gridSize); ctx.fill(); }
+    function drawCloud(x, y) { ctx.fillStyle = "lightblue"; ctx.beginPath(); ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 2, 0, Math.PI * 2); ctx.fill(); }
+    function drawPlatform(x, y, width, height) { ctx.fillStyle = "brown"; ctx.fillRect(x, y, width, height); }
+    function drawEnemy(x,y) { ctx.fillStyle = "purple"; ctx.fillRect(x, y, gridSize, gridSize); }
+    function drawSpike(x, y) { ctx.fillStyle = "black"; ctx.beginPath(); ctx.moveTo(x, y + gridSize); ctx.lineTo(x + gridSize / 2, y); ctx.lineTo(x + gridSize, y + gridSize); ctx.fill(); }
     function drawFallingBlock(x, y) { ctx.fillStyle = "darkgray"; ctx.fillRect(x, y, gridSize, gridSize); }
-    function drawOneWayPlatform(x, y) { ctx.fillStyle = "blue"; ctx.fillRect(x, y, gridSize, 10); }
+    function drawOneWayPlatform(x, y, width) { ctx.fillStyle = "lightgray"; ctx.fillRect(x, y, width, gridSize / 4); }
 
-    function findClosestElement(x, y, list) {
-      return list.find(element => Math.hypot(element.x - x, element.y - y) < gridSize / 2);
+    function moveCamera(direction) {
+      const moveAmount = gridSize;
+      switch (direction) {
+        case 'left': cameraOffsetX -= moveAmount; break;
+        case 'right': cameraOffsetX += moveAmount; break;
+        case 'up': cameraOffsetY -= moveAmount; break;
+        case 'down': cameraOffsetY += moveAmount; break;
+      }
+      redrawLevel();
     }
 
-function handleCanvasClick(event) {
-  const x = Math.round((event.offsetX + camera.x) / gridSize) * gridSize;
-  const y = Math.round((event.offsetY + camera.y) / gridSize) * gridSize;
+    canvas.addEventListener('click', event => {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left + cameraOffsetX;
+      const y = event.clientY - rect.top + cameraOffsetY;
 
-  if (currentMode === 'remove') {
-    const elementLists = [levelsData.level1.hills, levelsData.level1.hillsFront, levelsData.level1.clouds, levelsData.level1.platforms, levelsData.level1.enemies, levelsData.level1.spikes, levelsData.level1.fallingBlocks, levelsData.level1.oneWayPlatforms];
-    for (let list of elementLists) {
-      const element = findClosestElement(x, y, list);
-      if (element) {
-        list.splice(list.indexOf(element), 1);
-        break;
+      if (currentMode === 'remove') {
+        removeElement(x, y);
+      } else if (currentMode === 'move') {
+        selectElement(x, y);
+      } else {
+        addElement(x, y);
+      }
+    });
+
+    function selectElement(x, y) {
+      selectedElement = findElement(x, y);
+      if (selectedElement) {
+        document.body.addEventListener('keydown', handleMove);
       }
     }
-  } else if (currentMode === 'move') {
-    const elementLists = [levelsData.level1.hills, levelsData.level1.hillsFront, levelsData.level1.clouds, levelsData.level1.platforms, levelsData.level1.enemies, levelsData.level1.spikes, levelsData.level1.fallingBlocks, levelsData.level1.oneWayPlatforms];
-    for (let list of elementLists) {
-      selectedElement = findClosestElement(x, y, list);
-      if (selectedElement) break;
-    }
-  } else {
-    addElement(x, y);
-  }
 
-  redrawLevel();
-}
-
-function handleMouseMove(event) {
-  if (currentMode === 'move' && selectedElement) {
-    selectedElement.x = Math.round((event.offsetX + camera.x) / gridSize) * gridSize;
-    selectedElement.y = Math.round((event.offsetY + camera.y) / gridSize) * gridSize;
-    redrawLevel();
-  }
-}
-
-    function handleMouseUp() {
-      selectedElement = null;
+    function handleMove(event) {
+      if (!selectedElement) return;
+      const moveAmount = gridSize;
+      switch (event.key) {
+        case 'ArrowLeft': selectedElement.x -= moveAmount; break;
+        case 'ArrowRight': selectedElement.x += moveAmount; break;
+        case 'ArrowUp': selectedElement.y -= moveAmount; break;
+        case 'ArrowDown': selectedElement.y += moveAmount; break;
+      }
+      redrawLevel();
     }
 
-    canvas.addEventListener('mousedown', handleCanvasClick);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
-  </script>
+    function findElement(x, y) {
+      return levelsData.level1.hills.concat(levelsData.level1.hillsFront, levelsData.level1.clouds, levelsData.level1.platforms, levelsData.level1.enemies, levelsData.level1.spikes, levelsData.level1.fallingBlocks, levelsData.level1.oneWayPlatforms)
+        .find(elem => Math.abs(elem.x - x) < gridSize && Math.abs(elem.y - y) < gridSize);
+    }
+
+    function removeElement(x, y) {
+      ['hills', 'hillsFront', 'clouds', 'platforms', 'enemies', 'spikes', 'fallingBlocks', 'oneWayPlatforms'].forEach(group => {
+        levelsData.level1[group] = levelsData.level1[group].filter(elem => !(Math.abs(elem.x - x) < gridSize && Math.abs(elem.y - y) < gridSize));
+      });
+      redrawLevel();
+    }
+</script>
+    window.onload = () => { redrawLevel(); };
 </body>
 </html>
