@@ -95,8 +95,8 @@
     }
 
     function addElement(x, y) {
-      x = Math.round(x / gridSize) * gridSize + cameraOffsetX;
-      y = Math.round(y / gridSize) * gridSize + cameraOffsetY;
+      x = Math.round(x / gridSize) * gridSize; //+ cameraOffsetX;
+      y = Math.round(y / gridSize) * gridSize; //+ cameraOffsetY;
       const element = { x, y };
 
       switch(currentMode) {
